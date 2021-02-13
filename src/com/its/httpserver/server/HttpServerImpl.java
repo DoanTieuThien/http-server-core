@@ -8,7 +8,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import com.its.httpserver.handler.HttpBasicController;
+import com.its.httpserver.handler.HttpController;
+import com.its.httpserver.handler.HttpCreateControllerOnline;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
@@ -26,7 +27,8 @@ public class HttpServerImpl {
 			System.out.println("start http");
 			this.httpServer = HttpServer.create(new InetSocketAddress(port), 0);
 			// create controller
-			this.httpServer.createContext("/test", new HttpBasicController());
+			this.httpsServer.createContext("/create-controller", new HttpCreateControllerOnline(this));
+			this.httpServer.createContext("/test", new HttpController(this));
 			this.httpServer.start();
 			return;
 		}
@@ -47,7 +49,11 @@ public class HttpServerImpl {
 			this.httpsServer = HttpsServer.create(new InetSocketAddress(port), 0);
 			this.httpsServer.setHttpsConfigurator(new HttpsConfigurator(sc));
 
-			this.httpsServer.createContext("/test", new HttpBasicController());
+			//CONTROLLER CHUNG CHO TAT CA NGHIEP VU
+			this.httpsServer.createContext("/test", new HttpController(this));
+			
+			//CONTROLLER DAP UNG VIEC TAO DONG NGHIEP VU
+			this.httpsServer.createContext("/create-controller", new HttpCreateControllerOnline(this));
 			this.httpsServer.start();
 			return;
 		}
@@ -57,11 +63,11 @@ public class HttpServerImpl {
 	// this for next time
 	public void createControllerOline(String controllerName) {
 		if (this.httpServer != null) {
-			this.httpServer.createContext(controllerName, new HttpBasicController());
+			this.httpServer.createContext(controllerName, new HttpController(this));
 		}
 
 		if (this.httpsServer != null) {
-			this.httpsServer.createContext(controllerName, new HttpBasicController());
+			this.httpsServer.createContext(controllerName, new HttpController(this));
 		}
 	}
 

@@ -4,14 +4,25 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.its.httpserver.server.HttpServerImpl;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-
 //basic controller
-public class HttpBasicController implements HttpHandler {
+public abstract class HttpBasicController implements HttpHandler {
+	protected ObjectMapper objectMapper = new ObjectMapper();
+	private HttpServerImpl server = null;
 
-	//implement handle request come to controller
+	public HttpBasicController(HttpServerImpl server) {
+		this.server = server;
+	}
+
+	public HttpServerImpl getServer() {
+		return this.server;
+	}
+
+	// implement handle request come to controller
 	@Override
 	public void handle(HttpExchange httpExchange) throws IOException {
 		try {
@@ -27,14 +38,15 @@ public class HttpBasicController implements HttpHandler {
 			}
 			System.out
 					.println("Payload: " + payload + ", controller request " + httpExchange.getRequestURI().getPath());
-			buildResponse(200, "SUCCESSED REQUEST", httpExchange);
+			process(httpExchange, payload);
 		} catch (Exception exp) {
 			buildResponse(500, "error process: " + exp.getMessage(), httpExchange);
-			throw exp;
 		}
 	}
 
-	//response to client
+	protected abstract void process(HttpExchange httpExchange, String payload) throws Exception;
+
+	// response to client
 	protected void buildResponse(int httpStatus, String message, HttpExchange response) {
 		try {
 			response.sendResponseHeaders(httpStatus, message.length());
@@ -46,7 +58,7 @@ public class HttpBasicController implements HttpHandler {
 		}
 	}
 
-	//read payload if have for request
+	// read payload if have for request
 	protected String readRequest(HttpExchange request, int byteAvailable) {
 		StringBuilder body = new StringBuilder();
 		InputStreamReader reader = null;
@@ -73,4 +85,7 @@ public class HttpBasicController implements HttpHandler {
 		return body.toString();
 	}
 
+	public Object convertStringToModel(String payload, Class c) throws Exception {
+		return this.objectMapper.readValue(payload, c);
+	}
 }
